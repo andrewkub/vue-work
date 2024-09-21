@@ -3,6 +3,9 @@
     <section class="desk">
       <div class="desk__header">
         <h1 class="desk__title">Design Coffee Lab</h1>
+        <button class="desk__add" type="button" @click="addColumn">
+          Добавить столбец
+        </button>
         <div class="desk__filters">
           <div class="desk__user-filter">
             <ul class="user-filter">
@@ -41,56 +44,15 @@
       </div>
 
       <div v-if="columns.length" class="desk__columns">
-        <div v-for="column in columns" :key="column.id" class="column">
-          <h2 class="column__name">{{ column.title }}</h2>
-          <div class="column__target-area">
-            <div
-              v-for="task in columnTasks[column.id]"
-              :key="task.id"
-              class="column__task"
-            >
-              <div class="task">
-                <div v-if="task.user" class="task__user">
-                  <div class="task__avatar">
-                    <img
-                      :src="getImage(task.user.avatar)"
-                      :alt="task.user.name"
-                      height="20"
-                      width="20"
-                    />
-                  </div>
-                  {{ task.user.name }}
-                </div>
-
-                <div class="task__statuses">
-                  <span
-                    v-if="task.status"
-                    class="task__status"
-                    :class="`task__status--${task.status}`"
-                  />
-                  <span
-                    v-if="task.timeStatus"
-                    :class="`task__status--${task.timeStatus}`"
-                    class="task__status"
-                  />
-                </div>
-
-                <h5
-                  class="task__title"
-                  :class="{ 'task__title--first': !task.user }"
-                >
-                  {{ task.title }}
-                </h5>
-
-                <ul v-if="task.tags?.length" class="task__tags">
-                  <li v-for="(tag, index) in task.tags" :key="index">
-                    <span class="tag tag--blue">{{ tag }}</span>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
+        <desk-column
+          v-for="column in state.columns"
+          :key="column.id"
+          :column="column"
+          :tasks="props.tasks"
+          @update="updateColumn"
+          @delete="deleteColumn"
+          @update-tasks="$emit('updateTasks', $event)"
+        />
       </div>
 
       <p v-else class="desk__emptiness">Пока нет ни одной колонки</p>
@@ -99,33 +61,43 @@
 </template>
 
 <script setup>
+import { reactive } from "vue";
 import columns from "../mocks/columns.json";
 import users from "../mocks/users.json";
-import rawTasks from "../mocks/tasks.json";
-import { normalizeTask, getTagsArrayFromString } from "../common/helpers";
 import { STATUSES } from "../common/constants";
+import DeskColumn from "@/modules/columns/components/DeskColumn.vue";
+import { getImage } from "../common/helpers";
+import { uniqueId } from "lodash";
 
-const normalizedTasks = rawTasks.map((task) => normalizeTask(task));
+const props = defineProps({
+  tasks: {
+    type: Array,
+    required: true,
+  },
+  filters: {
+    type: Object,
+    required: true,
+  },
+});
 
-const columnTasks = normalizedTasks
-  // Фильтруем задачи, которые прикреплены к колонке
-  .filter(({ columnId }) => columnId)
-  .reduce((accumulator, task) => {
-    task.tags = getTagsArrayFromString(task.tags);
+defineEmits(["applyFilters", "updateTasks"]);
 
-    if (accumulator[task.columnId]) {
-      accumulator[task.columnId] = [...accumulator[task.columnId], task];
-    } else {
-      accumulator[task.columnId] = [task];
-    }
+const state = reactive({ columns });
 
-    return accumulator;
-  }, {});
+function addColumn() {
+  state.columns.push({ id: uniqueId("column_"), title: "Новый столбец" });
+}
 
-const getImage = (image) => {
-  // https://vitejs.dev/guide/assets.html#new-url-url-import-meta-url
-  return new URL(`../assets/img/${image}`, import.meta.url).href;
-};
+function updateColumn(column) {
+  const index = state.columns.findIndex(({ id }) => id === column.id);
+  if (~index) {
+    state.columns.splice(index, 1, column);
+  }
+}
+
+function deleteColumn(id) {
+  state.columns = state.columns.filter((column) => column.id !== id);
+}
 </script>
 
 <style lang="scss" scoped>

@@ -43,9 +43,9 @@ const validate = (value, appliedRules) => {
     if (!rule(value)) {
       error = message;
     }
-
-    return error;
   });
+
+  return error;
 };
 
 export const validateFields = (fields, validations) => {
@@ -53,10 +53,13 @@ export const validateFields = (fields, validations) => {
 
   Object.keys(validations).forEach((key) => {
     validations[key].error = validate(fields[key], validations[key].rules);
+
     if (validations[key].error) {
       isValid = false;
     }
   });
+
+  return isValid;
 };
 
 export const clearValidationErrors = (validations) => {

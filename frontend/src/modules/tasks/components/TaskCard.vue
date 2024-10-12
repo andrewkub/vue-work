@@ -1,9 +1,28 @@
+<script setup>
+import AppDrag from "@/common/components/AppDrag.vue";
+import AppDrop from "@/common/components/AppDrop.vue";
+import TaskCardTags from "./TaskCardTags.vue";
+import { getImage } from "@/common/helpers";
+import { useRouter } from "vue-router";
+
+defineProps({
+  task: {
+    type: Object,
+    required: true,
+  },
+});
+
+defineEmits(["drop"]);
+
+const router = useRouter();
+</script>
+
 <template>
   <!--    Компонент AppDrop отслеживает куда упала задача -->
   <app-drop @drop="$emit('drop', $event)">
     <!--      Компонент AppDrag определяет какая задача перемещается -->
     <app-drag :transfer-data="task">
-      <div class="task">
+      <div class="task" @click="router.push({ path: `/${task.id}` })">
         <!--        Этот блок показывает пользователя, который работает над задачей-->
         <div v-if="task.user" class="task__user">
           <div class="task__avatar">
@@ -41,22 +60,6 @@
     </app-drag>
   </app-drop>
 </template>
-
-<script setup>
-import AppDrag from "@/common/components/AppDrag.vue";
-import AppDrop from "@/common/components/AppDrop.vue";
-import TaskCardTags from "./TaskCardTags.vue";
-import { getImage } from "@/common/helpers";
-
-defineProps({
-  task: {
-    type: Object,
-    required: true,
-  },
-});
-
-defineEmits(["drop"]);
-</script>
 
 <style lang="scss" scoped>
 @import "@/assets/scss/app.scss";

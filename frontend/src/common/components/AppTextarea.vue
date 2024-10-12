@@ -43,6 +43,11 @@ const showError = computed(() => {
       :required="props.required"
       @input="$emit('update:modelValue', $event.target.value)"
     ></textarea>
+
+    <!--      Отображение ошибок валидации-->
+    <span v-if="showError" class="text-field__text">
+      {{ errorText }}
+    </span>
   </div>
 </template>
 
